@@ -1,0 +1,19 @@
+syntax = "v1"
+
+type (
+	UploadFileResp {
+		FileID int64 `json:"file_id"`
+	}
+)
+
+@server (
+	jwt: Auth
+)
+service repository-api {
+	@doc(
+		summary: "Upload File",
+	)
+	@handler UploadFile
+	post /file/upload returns(UploadFileResp)
+
+}
