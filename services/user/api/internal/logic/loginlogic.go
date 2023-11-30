@@ -38,7 +38,9 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err erro
 		return nil, err
 	}
 
-	token, err := utils.GenerateToken(int64(user.ID), user.Name)
+	accessSecret := l.svcCtx.Config.Auth.AccessSecret
+	accessExpire := l.svcCtx.Config.Auth.AccessExpire
+	token, err := utils.GenerateToken(accessSecret, accessExpire, int64(user.ID), user.Name)
 	if err != nil {
 		return nil, err
 	}

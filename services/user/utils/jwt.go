@@ -7,21 +7,20 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var key = "secret"
-
-func GenerateToken(userID int64, name string) (string, error) {
+func GenerateToken(accessSecret string, accessExpire int64, userID int64, name string) (string, error) {
+	now := time.Now()
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"name":    name,
-		"iat":     time.Now().Unix(),
-		"exp":     time.Now().Add(time.Hour * time.Duration(1)).Unix(),
+		"iat":     now.Unix(),
+		"exp":     now.Add(time.Duration(accessExpire) * time.Second).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString([]byte(key))
+	return token.SignedString([]byte(accessSecret))
 }
 
-func ValidateToken(tokenString string) (int64, string, error) {
+func ValidateToken(accessSecret, tokenString string) (int64, string, error) {
 	// If the token is empty, return an error.
 	if tokenString == "" {
 		return -1, "", fmt.Errorf("empty token")
@@ -32,7 +31,7 @@ func ValidateToken(tokenString string) (int64, string, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
 
-		return []byte(key), nil
+		return []byte(accessSecret), nil
 	})
 
 	if clams, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {

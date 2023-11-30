@@ -35,8 +35,14 @@ service user-api {
 	@handler Register
 	post /user/register(RegisterReq) returns(RegisterResp)
 
+}
+
+@server (
+	jwt: Auth
+)
+service user-api {
 	@doc(
-		summary: "UserInfo",
+		summary: "Get User Info",
 	)
 	@handler GetUserInfo
 	get /user/info(UserInfoReq) returns(UserInfoResp)

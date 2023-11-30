@@ -42,7 +42,9 @@ func (l *RegisterLogic) Register(req *types.RegisterReq) (resp *types.RegisterRe
 		return nil, err
 	}
 
-	token, err := utils.GenerateToken(int64(user.ID), user.Name)
+	accessSecret := l.svcCtx.Config.Auth.AccessSecret
+	accessExpire := l.svcCtx.Config.Auth.AccessExpire
+	token, err := utils.GenerateToken(accessSecret, accessExpire, int64(user.ID), user.Name)
 	if err != nil {
 		return nil, err
 	}

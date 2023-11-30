@@ -3,8 +3,12 @@ Host: 0.0.0.0
 Port: 8081
 
 MySQL:
-  Host: 127.0.0.1
-  Port: 3306
-  User: root
-  Password:
-  Database: clouddisk
+  Host: ${MYSQL_HOST}
+  Port: ${MYSQL_PORT}
+  User: ${MYSQL_USER}
+  Password: ${MYSQL_PASSWORD}
+  Database: ${MYSQL_DATABASE}
+
+Auth:
+  AccessSecret: ${ACCESS_SECRET}
+  AccessExpire: 3600
