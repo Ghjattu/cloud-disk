@@ -2,7 +2,8 @@ syntax = "v1"
 
 type (
 	UploadFileResp {
-		FileID int64 `json:"file_id"`
+		FileID  int64  `json:"file_id"`
+		FileURL string `json:"file_url"`
 	}
 )
 

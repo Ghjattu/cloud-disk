@@ -2,5 +2,6 @@
 package types
 
 type UploadFileResp struct {
-	FileID int64 `json:"file_id"`
+	FileID  int64  `json:"file_id"`
+	FileURL string `json:"file_url"`
 }

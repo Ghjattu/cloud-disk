@@ -15,6 +15,7 @@ import (
 	"github.com/Ghjattu/cloud-disk/services/repository/model"
 	"github.com/Ghjattu/cloud-disk/services/repository/oss"
 	"github.com/Ghjattu/cloud-disk/services/repository/utils"
+	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -44,16 +45,18 @@ func (l *UploadFileLogic) UploadFile(file multipart.File, fileHeader *multipart.
 	}
 
 	// check if file exists
-	var count int64 = 0
+	existedFile := &model.File{}
 	err = l.svcCtx.DB.Model(&model.File{}).
-		Where("owner_id = ? AND hash = ?", currentUserIDStr, fileHash).
-		Count(&count).Error
-	if err != nil {
+		Where("owner_id = ? AND hash = ?", currentUserID, fileHash).
+		First(&existedFile).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
-	}
-	if count > 0 {
-		// file exists, return
-		return nil, fmt.Errorf("file already exists")
+	} else if err == nil {
+		// file exists
+		return &types.UploadFileResp{
+			FileID:  int64(existedFile.ID),
+			FileURL: existedFile.Path,
+		}, nil
 	}
 
 	// Save video to local.
@@ -90,6 +93,7 @@ func (l *UploadFileLogic) UploadFile(file multipart.File, fileHeader *multipart.
 	}
 
 	return &types.UploadFileResp{
-		FileID: int64(fileModel.ID),
+		FileID:  int64(fileModel.ID),
+		FileURL: fileModel.Path,
 	}, nil
 }
