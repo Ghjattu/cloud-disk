@@ -2,9 +2,7 @@ package logic
 
 import (
 	"context"
-	"crypto/md5"
 	"fmt"
-	"io"
 	"mime/multipart"
 	"os"
 	"path"
@@ -15,6 +13,7 @@ import (
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/types"
 	"github.com/Ghjattu/cloud-disk/services/repository/model"
 	"github.com/Ghjattu/cloud-disk/services/repository/oss"
+	"github.com/Ghjattu/cloud-disk/services/repository/utils"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -37,12 +36,10 @@ func (l *UploadFileLogic) UploadFile(file multipart.File, fileHeader *multipart.
 	currentUserIDStr := fmt.Sprintf("%v", l.ctx.Value("user_id"))
 
 	// get md5 hash of file
-	b := make([]byte, fileHeader.Size)
-	_, err = file.Read(b)
+	fileHash, err := utils.GetMD5Hash(file, fileHeader)
 	if err != nil {
 		return nil, err
 	}
-	fileHash := fmt.Sprintf("%x", md5.Sum(b))
 
 	// check if file exists
 	var count int64 = 0
@@ -61,19 +58,8 @@ func (l *UploadFileLogic) UploadFile(file multipart.File, fileHeader *multipart.
 	publishTimeStr := time.Now().Format("2006-01-02-15:04:05")
 	finalFileName := fmt.Sprintf("%s_%s_%s", currentUserIDStr, publishTimeStr, fileHeader.Filename)
 	fileSavedLocalPath := filepath.Join("./", finalFileName)
-
-	// create a local file
-	localFile, err := os.Create(fileSavedLocalPath)
-	if err != nil {
-		fmt.Println("os.Create err: ", err)
-		return nil, err
-	}
-	// defer os.Remove(fileSavedLocalPath)
-	defer localFile.Close()
-
-	// copy file to local
-	file.Seek(0, 0)
-	_, err = io.Copy(localFile, file)
+	err = utils.SaveUploadedFile(file, fileSavedLocalPath)
+	defer os.Remove(fileSavedLocalPath)
 	if err != nil {
 		return nil, err
 	}
