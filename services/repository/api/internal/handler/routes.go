@@ -17,6 +17,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/file/upload",
 				Handler: UploadFileHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/file/exist",
+				Handler: CheckFileExistHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)

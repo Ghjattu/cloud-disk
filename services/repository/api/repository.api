@@ -5,6 +5,14 @@ type (
 		FileID  int64  `json:"file_id"`
 		FileURL string `json:"file_url"`
 	}
+	CheckFileExistReq {
+		Hash string `json:"hash"`
+	}
+	CheckFileExistResp {
+		Exist   bool   `json:"exist"`
+		FileID  int64  `json:"file_id"`
+		FileURL string `json:"file_url"`
+	}
 )
 
 @server (
@@ -12,9 +20,15 @@ type (
 )
 service repository-api {
 	@doc(
-		summary: "Upload File",
+		summary: "Upload File Without Chunked",
 	)
 	@handler UploadFile
 	post /file/upload returns(UploadFileResp)
+
+	@doc(
+		summary: "Check File Exist",
+	)
+	@handler CheckFileExist
+	get /file/exist(CheckFileExistReq) returns(CheckFileExistResp)
 
 }
