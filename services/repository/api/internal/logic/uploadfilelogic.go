@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
@@ -34,6 +35,7 @@ func NewUploadFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Upload
 
 func (l *UploadFileLogic) UploadFile(file multipart.File, fileHeader *multipart.FileHeader) (resp *types.UploadFileResp, err error) {
 	currentUserIDStr := fmt.Sprintf("%v", l.ctx.Value("user_id"))
+	currentUserID, _ := strconv.Atoi(currentUserIDStr)
 
 	// get md5 hash of file
 	fileHash, err := utils.GetMD5Hash(file, fileHeader)
@@ -44,7 +46,7 @@ func (l *UploadFileLogic) UploadFile(file multipart.File, fileHeader *multipart.
 	// check if file exists
 	var count int64 = 0
 	err = l.svcCtx.DB.Model(&model.File{}).
-		Where("id = ? AND hash = ?", currentUserIDStr, fileHash).
+		Where("owner_id = ? AND hash = ?", currentUserIDStr, fileHash).
 		Count(&count).Error
 	if err != nil {
 		return nil, err
@@ -75,11 +77,12 @@ func (l *UploadFileLogic) UploadFile(file multipart.File, fileHeader *multipart.
 	ossPath := fmt.Sprintf("https://%s.%s/%s", bucketName, endpoint, finalFileName)
 
 	fileModel := &model.File{
-		Hash: fileHash,
-		Name: fileHeader.Filename,
-		Ext:  path.Ext(fileHeader.Filename),
-		Size: fileHeader.Size,
-		Path: ossPath,
+		OwnerID: int64(currentUserID),
+		Hash:    fileHash,
+		Name:    fileHeader.Filename,
+		Ext:     path.Ext(fileHeader.Filename),
+		Size:    fileHeader.Size,
+		Path:    ossPath,
 	}
 	err = l.svcCtx.DB.Model(&model.File{}).Create(fileModel).Error
 	if err != nil {
