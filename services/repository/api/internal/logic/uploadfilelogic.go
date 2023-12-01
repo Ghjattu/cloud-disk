@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"time"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/types"
@@ -60,8 +59,7 @@ func (l *UploadFileLogic) UploadFile(file multipart.File, fileHeader *multipart.
 	}
 
 	// Save video to local.
-	publishTimeStr := time.Now().Format("2006-01-02-15:04:05")
-	finalFileName := fmt.Sprintf("%s_%s_%s", currentUserIDStr, publishTimeStr, fileHeader.Filename)
+	finalFileName := fmt.Sprintf("%s_%s", fileHash, fileHeader.Filename)
 	fileSavedLocalPath := filepath.Join("./", finalFileName)
 	err = utils.SaveUploadedFile(file, fileSavedLocalPath)
 	defer os.Remove(fileSavedLocalPath)
