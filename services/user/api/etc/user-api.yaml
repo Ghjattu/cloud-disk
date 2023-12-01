@@ -11,4 +11,4 @@ MySQL:
 
 Auth:
   AccessSecret: ${ACCESS_SECRET}
-  AccessExpire: 3600
+  AccessExpire: ${ACCESS_EXPIRE}

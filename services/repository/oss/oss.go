@@ -1,12 +1,16 @@
 package oss
 
 import (
+	"fmt"
+
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
 
 var (
-	client *oss.Client
-	bucket *oss.Bucket
+	client      *oss.Client
+	bucket      *oss.Bucket
+	_bucketName string
+	_endpoint   string
 )
 
 func Init(bucketName, endpoint, accessKeyID, accessKeySecret string) {
@@ -20,24 +24,24 @@ func Init(bucketName, endpoint, accessKeyID, accessKeySecret string) {
 	if err != nil {
 		panic(err)
 	}
+
+	_bucketName = bucketName
+	_endpoint = endpoint
 }
 
-// UploadFile upload file to oss and set public read permission.
-//
-//	@param objectKey string
-//	@param localFilePath string
-//	@return error
-func UploadFile(objectKey, localFilePath string) error {
+func UploadFile(objectKey, localFilePath string) (string, error) {
 	err := bucket.PutObjectFromFile(objectKey, localFilePath)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = bucket.SetObjectACL(objectKey, oss.ACLPublicRead)
 	if err != nil {
 		bucket.DeleteObject(objectKey)
-		return err
+		return "", err
 	}
 
-	return nil
+	url := fmt.Sprintf("https://%s.%s/%s", _bucketName, _endpoint, objectKey)
+
+	return url, nil
 }

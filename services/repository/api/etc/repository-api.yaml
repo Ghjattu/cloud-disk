@@ -4,7 +4,7 @@ Port: 8082
 
 Auth:
   AccessSecret: ${ACCESS_SECRET}
-  AccessExpire: 3600
+  AccessExpire: ${ACCESS_EXPIRE}
 
 OSS:
   Endpoint: ${OSS_ENDPOINT}

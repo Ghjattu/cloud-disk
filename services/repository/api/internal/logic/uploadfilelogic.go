@@ -70,15 +70,12 @@ func (l *UploadFileLogic) UploadFile(file multipart.File, fileHeader *multipart.
 	}
 
 	// Upload video to OSS.
-	if err := oss.UploadFile(finalFileName, fileSavedLocalPath); err != nil {
+	ossPath, err := oss.UploadFile(finalFileName, fileSavedLocalPath)
+	if err != nil {
 		return nil, err
 	}
 
 	// save file info to mysql
-	bucketName := l.svcCtx.Config.OSS.BucketName
-	endpoint := l.svcCtx.Config.OSS.Endpoint
-	ossPath := fmt.Sprintf("https://%s.%s/%s", bucketName, endpoint, finalFileName)
-
 	fileModel := &model.File{
 		OwnerID: int64(currentUserID),
 		Hash:    fileHash,
