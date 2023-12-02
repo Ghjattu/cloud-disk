@@ -25,7 +25,7 @@ func main() {
 	// Initialize oss client.
 	oss.Init(c.OSS.BucketName, c.OSS.Endpoint, c.OSS.AccessKeyID, c.OSS.AccessKeySecret)
 
-	server := rest.MustNewServer(c.RestConf)
+	server := rest.MustNewServer(c.RestConf, rest.WithCors())
 	defer server.Stop()
 
 	ctx := svc.NewServiceContext(c)
