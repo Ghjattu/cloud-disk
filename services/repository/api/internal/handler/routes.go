@@ -19,7 +19,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 			{
 				Method:  http.MethodGet,
-				Path:    "/file/exist",
+				Path:    "/file/exist/:hash",
 				Handler: CheckFileExistHandler(serverCtx),
 			},
 		},

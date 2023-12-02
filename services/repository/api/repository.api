@@ -6,7 +6,7 @@ type (
 		FileURL string `json:"file_url"`
 	}
 	CheckFileExistReq {
-		Hash string `json:"hash"`
+		Hash string `path:"hash"`
 	}
 	CheckFileExistResp {
 		Exist   bool   `json:"exist"`
@@ -29,6 +29,6 @@ service repository-api {
 		summary: "Check File Exist",
 	)
 	@handler CheckFileExist
-	get /file/exist(CheckFileExistReq) returns(CheckFileExistResp)
+	get /file/exist/:hash(CheckFileExistReq) returns(CheckFileExistResp)
 
 }

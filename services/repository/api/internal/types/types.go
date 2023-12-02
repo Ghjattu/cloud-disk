@@ -7,7 +7,7 @@ type UploadFileResp struct {
 }
 
 type CheckFileExistReq struct {
-	Hash string `json:"hash"`
+	Hash string `path:"hash"`
 }
 
 type CheckFileExistResp struct {
