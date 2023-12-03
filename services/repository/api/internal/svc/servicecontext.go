@@ -5,6 +5,7 @@ import (
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/config"
 	"github.com/Ghjattu/cloud-disk/services/repository/model"
+	"github.com/zeromicro/go-zero/core/stores/redis"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -12,6 +13,7 @@ import (
 type ServiceContext struct {
 	Config config.Config
 	DB     *gorm.DB
+	Redis  *redis.Redis
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -28,6 +30,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config: c,
 		DB:     db,
+		Redis:  redis.MustNewRedis(c.RedisConf),
 	}
 }
 

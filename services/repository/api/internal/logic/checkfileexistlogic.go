@@ -8,6 +8,7 @@ import (
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/types"
 	"github.com/Ghjattu/cloud-disk/services/repository/model"
+	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -35,15 +36,32 @@ func (l *CheckFileExistLogic) CheckFileExist(req *types.CheckFileExistReq) (resp
 	err = l.svcCtx.DB.Model(&model.File{}).
 		Where("owner_id = ? AND hash = ?", currentUserID, req.Hash).
 		First(fileModel).Error
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
+		// server error
+		return nil, err
+	}
+	if err == nil {
+		// file already exist
 		return &types.CheckFileExistResp{
-			Exist: false,
+			Exist:      true,
+			FileID:     int64(fileModel.ID),
+			FileURL:    fileModel.Path,
+			ChunksHash: []string{},
 		}, nil
 	}
 
+	// now, file not exist
+	// retrieve chunks hash from redis
+	redisKey := fmt.Sprintf("%d_%s", currentUserID, req.Hash)
+	chunksHash, err := l.svcCtx.Redis.Hkeys(redisKey)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.CheckFileExistResp{
-		Exist:   true,
-		FileID:  int64(fileModel.ID),
-		FileURL: fileModel.Path,
+		Exist:      false,
+		FileID:     -1,
+		FileURL:    "",
+		ChunksHash: chunksHash,
 	}, nil
 }

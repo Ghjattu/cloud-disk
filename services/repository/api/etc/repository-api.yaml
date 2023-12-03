@@ -18,3 +18,8 @@ MySQL:
   User: ${MYSQL_USER}
   Password: ${MYSQL_PASSWORD}
   Database: ${MYSQL_DATABASE}
+
+RedisConf:
+  Host: ${REDIS_HOST}
+  Pass: ${REDIS_PASSWORD}
+  Type: node
