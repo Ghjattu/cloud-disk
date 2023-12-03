@@ -21,9 +21,11 @@ const App = () => {
 
 		// calculate MD5 hash of file
 		let fileHash = null;
+		let chunksHash = [];
 		try {
-			fileHash = await CalculateMD5(selectedFile);
-			console.log(fileHash);
+			const resp = await CalculateMD5(selectedFile);
+			fileHash = resp.fileHash;
+			chunksHash = resp.chunksHash;
 		} catch (error) {
 			console.log('Error calculating MD5: ', error);
 			return;
@@ -35,22 +37,18 @@ const App = () => {
 			alert('File uploaded successfully');
 			return;
 		}
+		const uploadedChunksHash = resp.chunks_hash;
 
-		// TODO: upload file in chunks
-
-		// const formData = new FormData();
-		// formData.append('file', selectedFile);
-		// fetch('http://localhost:5000/upload', {
-		// 	method: 'POST',
-		// 	body: formData,
-		// })
-		// 	.then((response) => response.json())
-		// 	.then((result) => {
-		// 		console.log('Success:', result);
-		// 	})
-		// 	.catch((error) => {
-		// 		console.error('Error:', error);
-		// 	});
+		// upload file in chunks
+		try {
+			const resp = await uploadFileAPI.
+				UploadFileInChunks(selectedFile, fileHash, chunksHash, uploadedChunksHash);
+			// TODO: handle response
+			console.log(resp);
+		} catch (error) {
+			console.log('Error uploading file: ', error);
+			return;
+		}
 	};
 
 	return (

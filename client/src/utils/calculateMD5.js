@@ -6,23 +6,26 @@ const CalculateMD5 = async (file) => {
 	return new Promise((resolve, reject) => {
 		const chunkSize = GetChunkSize();
 		const totalChunks = Math.ceil(file.size / chunkSize);
+		const chunksHash = [];
 		let currentChunk = 0;
 		const sparkArrayBuffer = new SparkMD5.ArrayBuffer();
 		const fileReader = new FileReader();
 
 		fileReader.onload = () => {
-			console.log('currentChunk: ', currentChunk);
 			sparkArrayBuffer.append(fileReader.result);
+			chunksHash.push(SparkMD5.ArrayBuffer.hash(fileReader.result));
 			currentChunk++;
 
 			if (currentChunk < totalChunks) {
 				loadNext();
 			} else {
-				console.log('finished loading file');
+				console.log('calculate MD5 finished');
 				const fileHash = sparkArrayBuffer.end();
-				console.log('fileHash: ', fileHash);
 
-				resolve(fileHash);
+				resolve({
+					fileHash,
+					chunksHash,
+				});
 			}
 
 		};
