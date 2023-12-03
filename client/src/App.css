@@ -4,33 +4,3 @@
 	align-items: center;
 	margin-top: 50px;
 }
-
-.authentication-form form {
-	width: 300px;
-	margin: 20px;
-	padding: 20px;
-	border: 1px solid #ddd;
-	border-radius: 8px;
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.authentication-form h2 {
-	font-size: 1.5em;
-	color: #333;
-	margin-bottom: 20px;
-}
-
-.wrapper button {
-	padding: 10px;
-	margin-top: 10px;
-	cursor: pointer;
-	background-color: #4caf50;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	transition: background-color 0.3s ease;
-}
-
-.wrapper button:hover {
-	background-color: #3e8e41;
-}
