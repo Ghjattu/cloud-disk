@@ -25,9 +25,11 @@ func UploadFileHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		var req types.UploadFileReq
 		err = json.Unmarshal([]byte(chunkInfo), &req)
 		if err != nil {
+			fmt.Println("unmarshal chunk info error: ", err)
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
+		fmt.Printf("handler receive chunk info: %+v\n", req)
 
 		l := logic.NewUploadFileLogic(r.Context(), svcCtx)
 		resp, err := l.UploadFile(&req, chunk, chunkHeader.Size)

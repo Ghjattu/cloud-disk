@@ -43,7 +43,6 @@ const App = () => {
 		try {
 			const resp = await uploadFileAPI.
 				UploadFileInChunks(selectedFile, fileHash, chunksHash, uploadedChunksHash);
-			// TODO: handle response
 			console.log(resp);
 		} catch (error) {
 			console.log('Error uploading file: ', error);

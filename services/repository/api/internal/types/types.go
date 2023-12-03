@@ -5,6 +5,7 @@ type UploadFileReq struct {
 	FileHash    string `json:"file_hash"`
 	TotalChunks int    `json:"total_chunks"`
 	ChunkHash   string `json:"chunk_hash"`
+	ChunkNum    int    `json:"chunk_num"`
 }
 
 type UploadFileResp struct {

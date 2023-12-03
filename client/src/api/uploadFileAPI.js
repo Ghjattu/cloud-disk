@@ -20,14 +20,13 @@ const CheckFileExistence = async (fileHash) => {
 
 const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash) => {
 	console.log('start uploading file in chunks');
-	const url = `${baseURL}/file/upload_chunk`;
+	const url = `${baseURL}/file/upload`;
 	const headers = {
 		// add this line will cause error
 		// 'Content-Type': 'multipart/form-data',
 		'Authorization': `Bearer ${token}`,
 	};
 
-	// TODO: need refactor
 	return new Promise((resolve, reject) => {
 		const chunkSize = GetChunkSize(); // 100 KB
 		const totalChunks = Math.ceil(file.size / chunkSize);
@@ -47,6 +46,7 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 				'file_hash': fileHash,
 				'total_chunks': totalChunks,
 				'chunk_hash': chunksHash[chunkNum],
+				'chunk_num': chunkNum
 			}));
 
 			fetch(url, {
@@ -54,28 +54,17 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 				headers: headers,
 				body: formData,
 			})
-				.then((response) => {
-					if (!response.ok) {
-						reject(new Error('Network response was not ok'));
-					}
-					return response.json();
-				})
+				.then((response) => response.json())
 				.then((resp) => {
 					console.log('Upload chunk %d successfully', chunkNum);
 					if (resp.file_success) {
 						resolve(resp);
-					}
-					if (!resp.chunk_success) {
-						reject(new Error('Upload chunk failed'));
 					}
 				})
 				.catch((error) => {
 					reject(error);
 				});
 		}
-
-		// TODO: delete this line
-		resolve('all fetch done');
 	});
 };
 
