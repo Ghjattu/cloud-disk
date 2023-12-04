@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"sync"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/types"
@@ -16,6 +17,8 @@ import (
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
+
+var mu sync.Mutex
 
 type UploadFileLogic struct {
 	logx.Logger
@@ -31,7 +34,8 @@ func NewUploadFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Upload
 	}
 }
 
-func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.File, chunkSize int64) (resp *types.UploadFileResp, err error) {
+func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.File, chunkSize int64) (*types.UploadFileResp, error) {
+	resp := &types.UploadFileResp{}
 	fmt.Printf("upload file logic receive chunk num: %d\n", req.ChunkNum)
 	currentUserIDStr := fmt.Sprintf("%v", l.ctx.Value("user_id"))
 	currentUserID, _ := strconv.ParseInt(currentUserIDStr, 10, 64)
@@ -40,12 +44,12 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 	chunkHash, err := utils.GetMD5Hash(chunk, chunkSize)
 	if err != nil {
 		resp.StatusMsg = err.Error()
-		return
+		return resp, err
 	}
 	if chunkHash != req.ChunkHash {
 		err = fmt.Errorf("chunk hash mismatch")
 		resp.StatusMsg = "chunk hash mismatch"
-		return
+		return resp, err
 	}
 
 	// save chunk in redis and set expiration time to 24 hours
@@ -53,15 +57,17 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 	err = utils.SaveChunkInRedis(l.svcCtx.Redis, chunk, redisKey, req.ChunkNum)
 	if err != nil {
 		resp.StatusMsg = err.Error()
-		return
+		return resp, err
 	}
 
 	// get the count of saved chunks
+	mu.Lock()
+	defer mu.Unlock()
 	chunkCount, err := l.svcCtx.Redis.Hlen(redisKey)
 	fmt.Printf("chunk count: %d\n\n", chunkCount)
 	if err != nil {
 		resp.StatusMsg = err.Error()
-		return
+		return resp, err
 	}
 	if chunkCount == req.TotalChunks {
 		// merge chunks
@@ -71,7 +77,7 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 		err = utils.MergeChunks(l.svcCtx.Redis, redisKey, savedLocalPath, req.FileHash)
 		if err != nil {
 			resp.StatusMsg = err.Error()
-			return
+			return resp, err
 		}
 
 		// upload file to oss
