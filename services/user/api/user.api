@@ -1,0 +1,50 @@
+syntax = "v1"
+
+type (
+	RegisterReq {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+	RegisterResp {
+		Token string `json:"token"`
+	}
+	LoginReq {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+	LoginResp {
+		Token string `json:"token"`
+	}
+	UserInfoReq {
+		ID int64 `json:"id"`
+	}
+	UserInfoResp {
+		Name string `json:"name"`
+	}
+)
+service user-api {
+	@doc(
+		summary: "Login",
+	)
+	@handler Login
+	post /user/login(LoginReq) returns(LoginResp)
+
+	@doc(
+		summary: "Register",
+	)
+	@handler Register
+	post /user/register(RegisterReq) returns(RegisterResp)
+
+}
+
+@server (
+	jwt: Auth
+)
+service user-api {
+	@doc(
+		summary: "Get User Info",
+	)
+	@handler GetUserInfo
+	get /user/info(UserInfoReq) returns(UserInfoResp)
+
+}

@@ -1,0 +1,25 @@
+Name: repository-api
+Host: 0.0.0.0
+Port: 8082
+
+Auth:
+  AccessSecret: ${ACCESS_SECRET}
+  AccessExpire: ${ACCESS_EXPIRE}
+
+OSS:
+  Endpoint: ${OSS_ENDPOINT}
+  AccessKeyID: ${OSS_ACCESS_KEY_ID}
+  AccessKeySecret: ${OSS_ACCESS_KEY_SECRET}
+  BucketName: ${OSS_BUCKET_NAME}
+
+MySQL:
+  Host: ${MYSQL_HOST}
+  Port: ${MYSQL_PORT}
+  User: ${MYSQL_USER}
+  Password: ${MYSQL_PASSWORD}
+  Database: ${MYSQL_DATABASE}
+
+RedisConf:
+  Host: ${REDIS_HOST}
+  Pass: ${REDIS_PASSWORD}
+  Type: node
