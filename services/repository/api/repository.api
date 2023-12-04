@@ -26,6 +26,12 @@ type (
 		FileURL    string   `json:"file_url"`
 		ChunksHash []string `json:"chunks_hash"`
 	}
+	GetFileListResp {
+		FileID   int64  `json:"file_id"`
+		FileName string `json:"file_name"`
+		FileSize int64  `json:"file_size"`
+		FileURL  string `json:"file_url"`
+	}
 )
 
 @server (
@@ -43,5 +49,11 @@ service repository-api {
 	)
 	@handler CheckFileExist
 	get /file/exist/:hash(CheckFileExistReq) returns(CheckFileExistResp)
+
+	@doc(
+		summary: "Get File List",
+	)
+	@handler GetFileList
+	get /file/list returns([]GetFileListResp)
 
 }

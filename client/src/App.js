@@ -22,7 +22,7 @@ const App = () => {
 	return (
 		<div className="wrapper">
 			{token == null ? <AuthenticationForm handleTokenChange={handleTokenChange} /> :
-				<Dashboard />}
+				<Dashboard token={token} />}
 		</div>
 	);
 };

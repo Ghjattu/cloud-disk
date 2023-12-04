@@ -1,8 +1,16 @@
+.dashboard-container {
+	display: flex;
+	flex-direction: column;
+	max-width: 800px;
+	margin: 0 auto;
+	row-gap: 20px;
+}
+
 .form-container {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 100vh;
+	margin: 10px auto 0 30px;
 }
 
 .form-container form {
@@ -34,5 +42,52 @@
 }
 
 .form-container button:hover {
+	background-color: #45a049;
+}
+
+.file-list-container {
+	margin: 0 10px;
+	padding: 20px;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.file-list-title {
+	font-size: 1.3rem;
+	margin-bottom: 10px;
+}
+
+.file-list {
+	list-style: none;
+	padding: 0;
+}
+
+.file-list-item {
+	border-bottom: 1px solid #eee;
+	padding: 10px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.file-name {
+	flex: 2;
+}
+
+.file-size {
+	flex: 1;
+}
+
+.file-url a {
+	text-decoration: none;
+	padding: 5px 10px;
+	background-color: #4caf50;
+	color: #fff;
+	border-radius: 3px;
+	transition: background-color 0.3s;
+}
+
+.file-url a:hover {
 	background-color: #45a049;
 }

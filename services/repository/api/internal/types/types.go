@@ -29,3 +29,10 @@ type CheckFileExistResp struct {
 	FileURL    string   `json:"file_url"`
 	ChunksHash []string `json:"chunks_hash"`
 }
+
+type GetFileListResp struct {
+	FileID   int64  `json:"file_id"`
+	FileName string `json:"file_name"`
+	FileSize int64  `json:"file_size"`
+	FileURL  string `json:"file_url"`
+}

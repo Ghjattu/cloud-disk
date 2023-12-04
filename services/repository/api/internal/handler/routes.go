@@ -22,6 +22,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/file/exist/:hash",
 				Handler: CheckFileExistHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/file/list",
+				Handler: GetFileListHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
