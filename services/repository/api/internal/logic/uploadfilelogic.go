@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"os"
+	"path"
 	"strconv"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
@@ -38,42 +39,52 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 	// consistency check of the chunk
 	chunkHash, err := utils.GetMD5Hash(chunk, chunkSize)
 	if err != nil {
-		return nil, err
+		resp.StatusMsg = err.Error()
+		return
 	}
 	if chunkHash != req.ChunkHash {
-		return nil, fmt.Errorf("chunk hash mismatch")
+		err = fmt.Errorf("chunk hash mismatch")
+		resp.StatusMsg = "chunk hash mismatch"
+		return
 	}
 
 	// save chunk in redis and set expiration time to 24 hours
-	redisKey := fmt.Sprintf("%s_%s", currentUserIDStr, req.FileHash)
+	redisKey := fmt.Sprintf("%d_%s", currentUserID, req.FileHash)
 	err = utils.SaveChunkInRedis(l.svcCtx.Redis, chunk, redisKey, req.ChunkNum)
 	if err != nil {
-		return nil, err
+		resp.StatusMsg = err.Error()
+		return
 	}
 
 	// get the count of saved chunks
 	chunkCount, err := l.svcCtx.Redis.Hlen(redisKey)
 	fmt.Printf("chunk count: %d\n\n", chunkCount)
 	if err != nil {
-		return nil, err
+		resp.StatusMsg = err.Error()
+		return
 	}
 	if chunkCount == req.TotalChunks {
 		// merge chunks
-		savedLocalPath := fmt.Sprintf("./%s", req.FileHash)
+		savedLocalPath := fmt.Sprintf("./%d_%s", currentUserID, req.FileHash)
 		defer os.Remove(savedLocalPath)
 
 		err = utils.MergeChunks(l.svcCtx.Redis, redisKey, savedLocalPath, req.FileHash)
 		if err != nil {
-			return nil, err
+			resp.StatusMsg = err.Error()
+			return
 		}
 
 		// upload file to oss
-		ossPath, _ := oss.UploadFile(redisKey, savedLocalPath)
+		objectKey := fmt.Sprintf("%d_%s%s", currentUserID, req.FileHash, path.Ext(req.FileName))
+		ossPath, _ := oss.UploadFile(objectKey, savedLocalPath)
 
 		// save file meta to mysql
 		fileModel := &model.File{
 			OwnerID: currentUserID,
 			Hash:    req.FileHash,
+			Name:    req.FileName,
+			Ext:     path.Ext(req.FileName),
+			Size:    req.FileSize,
 			Path:    ossPath,
 		}
 

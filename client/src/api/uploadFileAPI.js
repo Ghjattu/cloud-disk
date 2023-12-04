@@ -43,6 +43,8 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 			const formData = new FormData();
 			formData.append('chunk', chunk);
 			formData.append('chunk_info', JSON.stringify({
+				'file_name': file.name,
+				'file_size': file.size,
 				'file_hash': fileHash,
 				'total_chunks': totalChunks,
 				'chunk_hash': chunksHash[chunkNum],

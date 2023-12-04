@@ -2,6 +2,8 @@
 package types
 
 type UploadFileReq struct {
+	FileName    string `json:"file_name"`
+	FileSize    int64  `json:"file_size"`
 	FileHash    string `json:"file_hash"`
 	TotalChunks int    `json:"total_chunks"`
 	ChunkHash   string `json:"chunk_hash"`
@@ -9,6 +11,7 @@ type UploadFileReq struct {
 }
 
 type UploadFileResp struct {
+	StatusMsg    string `json:"status_msg"`
 	FileSuccess  bool   `json:"file_success"`
 	ChunkSuccess bool   `json:"chunk_success"`
 	ChunksCount  int    `json:"chunks_count"`
