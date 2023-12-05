@@ -15,7 +15,9 @@ const Dashboard = ({ token }) => {
 	useEffect(() => {
 		const initiateFileList = async () => {
 			const resp = await GetFileAPI.GetFileList(token);
-			setFileList(resp);
+			if (resp != null) {
+				setFileList(resp);
+			}
 		};
 		initiateFileList();
 	}, []);
