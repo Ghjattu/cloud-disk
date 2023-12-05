@@ -1,5 +1,5 @@
 const GetChunkSize = () => {
-	return 100 * 1024; // 100KB
+	return 500 * 1024; // 500KB
 };
 
 export default GetChunkSize;
