@@ -1,7 +1,5 @@
-const baseURL = 'http://127.0.0.1:8082';
-
 const GetFileList = async (token) => {
-	const url = `${baseURL}/file/list`;
+	const url = 'file/list';
 	const headers = {
 		'Accept': 'application/json',
 		'Authorization': `Bearer ${token}`,

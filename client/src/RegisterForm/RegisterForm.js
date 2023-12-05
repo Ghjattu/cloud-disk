@@ -20,7 +20,7 @@ const RegisterForm = ({ handleTokenChange }) => {
 		event.preventDefault();
 
 		try {
-			const resp = await AuthenticationAPI.Login(username, password);
+			const resp = await AuthenticationAPI.Register(username, password);
 			handleTokenChange(resp.token);
 		} catch (error) {
 			console.log(error);

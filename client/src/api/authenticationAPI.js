@@ -1,7 +1,5 @@
-const baseURL = 'http://127.0.0.1:8081';
-
 const Register = async (username, password) => {
-	const url = `${baseURL}/user/register`;
+	const url = '/user/register';
 	const headers = {
 		'Content-Type': 'application/json',
 		'Accept': 'application/json',
@@ -20,7 +18,7 @@ const Register = async (username, password) => {
 };
 
 const Login = async (username, password) => {
-	const url = `${baseURL}/user/login`;
+	const url = '/user/login';
 	const headers = {
 		'Content-Type': 'application/json',
 		'Accept': 'application/json',
