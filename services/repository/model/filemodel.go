@@ -8,6 +8,6 @@ type File struct {
 	Hash    string `gorm:"type:varchar(255);not null"`
 	Name    string `gorm:"type:varchar(255);not null"`
 	Ext     string `gorm:"type:varchar(20);not null"`
-	Size    int64  `gorm:"type:float;not null"`
+	Size    int64  `gorm:"type:bigint;not null"`
 	Path    string `gorm:"type:varchar(255);not null"`
 }
