@@ -1,9 +1,7 @@
 import GetChunkSize from '../utils/getChunkSize.js';
 
-const baseURL = 'http://127.0.0.1:8082';
-
 const CheckFileExistence = async (fileHash, token) => {
-	const url = `${baseURL}/file/exist/${fileHash}`;
+	const url = `/file/exist/${fileHash}`;
 	const headers = {
 		'Content-Type': 'application/json',
 		'Accept': 'application/json',
@@ -19,7 +17,7 @@ const CheckFileExistence = async (fileHash, token) => {
 
 const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash, token) => {
 	console.log('start uploading file in chunks');
-	const url = `${baseURL}/file/upload`;
+	const url = '/file/upload';
 	const headers = {
 		// add this line will cause error
 		// 'Content-Type': 'multipart/form-data',
