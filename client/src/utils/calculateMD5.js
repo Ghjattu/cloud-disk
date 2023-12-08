@@ -1,10 +1,10 @@
 import SparkMD5 from 'spark-md5';
-import GetChunkSize from './getChunkSize.js';
 
 // Calculate MD5 hash of file in chunks
 const CalculateMD5 = async (file) => {
 	return new Promise((resolve, reject) => {
-		const chunkSize = GetChunkSize();
+		// eslint-disable-next-line no-undef
+		const chunkSize = parseInt(process.env.REACT_APP_CHUNK_SIZE);
 		const totalChunks = Math.ceil(file.size / chunkSize);
 		const chunksHash = [];
 		let currentChunk = 0;
