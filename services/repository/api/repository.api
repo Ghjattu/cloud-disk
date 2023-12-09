@@ -10,7 +10,6 @@ type (
 		ChunkNum    int    `json:"chunk_num"`
 	}
 	UploadFileResp {
-		StatusMsg    string `json:"status_msg"`
 		FileSuccess  bool   `json:"file_success"`
 		ChunkSuccess bool   `json:"chunk_success"`
 		ChunksCount  int    `json:"chunks_count"`
