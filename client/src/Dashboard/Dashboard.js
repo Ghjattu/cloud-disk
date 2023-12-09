@@ -11,6 +11,7 @@ import LinearDeterminate from '../LinearDeterminate/LinearDeterminate.js';
 
 const Dashboard = ({ token }) => {
 	const [selectedFile, setSelectedFile] = useState(null);
+	const [isUploading, setIsUploading] = useState(false);
 	const [fileList, setFileList] = useImmer([]);
 	const [progress, setProgress] = useState(0);
 
@@ -40,6 +41,8 @@ const Dashboard = ({ token }) => {
 			return;
 		}
 
+		setIsUploading(true);
+
 		// calculate MD5 hash of file
 		let fileHash = null;
 		let chunksHash = [];
@@ -49,6 +52,7 @@ const Dashboard = ({ token }) => {
 			chunksHash = resp.chunksHash;
 		} catch (error) {
 			console.log('Error calculating MD5: ', error);
+			setIsUploading(false);
 			return;
 		}
 
@@ -56,6 +60,7 @@ const Dashboard = ({ token }) => {
 		const resp = await uploadFileAPI.CheckFileExistence(fileHash, token);
 		if (resp.data.exist) {
 			alert('File uploaded successfully');
+			setIsUploading(false);
 			return;
 		}
 		const uploadedChunksHash = resp.data.chunks_hash;
@@ -81,8 +86,9 @@ const Dashboard = ({ token }) => {
 			}
 		} catch (error) {
 			alert('Error uploading file: ', error);
-			return;
 		}
+
+		setIsUploading(false);
 	};
 
 	return (
@@ -96,7 +102,7 @@ const Dashboard = ({ token }) => {
 						<input type='file' id='file' name='file' onChange={handleFileChange} />
 					</div>
 					<div>
-						<button type='submit'>Submit</button>
+						<button type='submit' disabled={isUploading}>Submit</button>
 					</div>
 				</form>
 			</div>

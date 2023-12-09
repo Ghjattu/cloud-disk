@@ -45,6 +45,12 @@
 	background-color: #45a049;
 }
 
+.form-container button:disabled {
+	background-color: #bdc3c7;
+	color: #7f8c8d;
+	cursor: not-allowed;
+}
+
 .upload-progress {
 	margin: 0 10px;
 }
