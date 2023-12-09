@@ -51,12 +51,10 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 					body: formData,
 				});
 				const resp = await response.json();
-				if (resp.file_success) {
-					console.log('upload file success');
+				if (resp.data.file_success) {
 					resolve(resp);
 				}
-				if (resp.chunk_success) {
-					console.log('upload chunk success!');
+				if (resp.data.chunk_success) {
 					if (chunkNum + windowSize < totalChunks) {
 						sendRequest(chunkNum + windowSize);
 					}

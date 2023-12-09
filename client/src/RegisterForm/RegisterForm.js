@@ -21,7 +21,7 @@ const RegisterForm = ({ handleTokenChange }) => {
 
 		try {
 			const resp = await AuthenticationAPI.Register(username, password);
-			handleTokenChange(resp.token);
+			handleTokenChange(resp.data.token);
 		} catch (error) {
 			console.log(error);
 		}

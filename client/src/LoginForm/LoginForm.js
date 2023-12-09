@@ -21,7 +21,7 @@ const LoginForm = ({ handleTokenChange }) => {
 
 		try {
 			const resp = await AuthenticationAPI.Login(username, password);
-			handleTokenChange(resp.token);
+			handleTokenChange(resp.data.token);
 		} catch (error) {
 			console.log(error);
 		}
