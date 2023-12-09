@@ -2,6 +2,7 @@ import React from 'react';
 import './FileList.css';
 import PropTypes from 'prop-types';
 import FormatBytes from '../utils/formatBytes.js';
+import FormatTime from '../utils/formatTime.js';
 
 const FileList = ({ fileList }) => {
 	return (
@@ -12,6 +13,7 @@ const FileList = ({ fileList }) => {
 					<tr className='file-list-head'>
 						<th>File Name</th>
 						<th>File Size</th>
+						<th>Upload Time</th>
 						<th>Download</th>
 					</tr>
 				</thead>
@@ -20,6 +22,7 @@ const FileList = ({ fileList }) => {
 						<tr key={file.file_id} className='file-list-item'>
 							<td className='file-name'>{file.file_name}</td>
 							<td className='file-size'>{ FormatBytes(file.file_size) }</td>
+							<td>{ FormatTime(file.upload_time) }</td>
 							<td className='file-url'>
 								<a href={file.file_url}>Download</a>
 							</td>

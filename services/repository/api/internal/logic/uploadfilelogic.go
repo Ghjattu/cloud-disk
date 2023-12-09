@@ -8,6 +8,7 @@ import (
 	"path"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/types"
@@ -78,14 +79,15 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 		objectKey := fmt.Sprintf("%d_%s%s", currentUserID, req.FileHash, path.Ext(req.FileName))
 		ossPath, _ := oss.UploadFile(objectKey, savedLocalPath)
 
+		now := time.Now()
 		// save file meta to mysql
 		fileModel := &model.File{
-			OwnerID: currentUserID,
-			Hash:    req.FileHash,
-			Name:    req.FileName,
-			Ext:     path.Ext(req.FileName),
-			Size:    req.FileSize,
-			Path:    ossPath,
+			OwnerID:    currentUserID,
+			Hash:       req.FileHash,
+			Name:       req.FileName,
+			Size:       req.FileSize,
+			Path:       ossPath,
+			UploadTime: now,
 		}
 
 		l.svcCtx.DB.Model(&model.File{}).Create(fileModel)
@@ -99,6 +101,7 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 			ChunksCount:  req.TotalChunks,
 			FileID:       int64(fileModel.ID),
 			FileURL:      ossPath,
+			UploadTime:   now.Unix(),
 		}, nil
 	}
 

@@ -63,6 +63,7 @@ const Dashboard = ({ token }) => {
 						file_name: selectedFile.name,
 						file_size: selectedFile.size,
 						file_url: resp.data.file_url,
+						upload_time: resp.data.upload_time,
 					});
 				});
 				setSelectedFile(null);
