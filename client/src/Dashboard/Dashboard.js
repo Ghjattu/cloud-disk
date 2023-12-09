@@ -7,10 +7,18 @@ import CalculateMD5 from '../utils/calculateMD5.js';
 import uploadFileAPI from '../api/uploadFileAPI.js';
 import GetFileAPI from '../api/getFilesAPI.js';
 import FileList from '../FileList/FileList.js';
+import LinearDeterminate from '../LinearDeterminate/LinearDeterminate.js';
 
 const Dashboard = ({ token }) => {
 	const [selectedFile, setSelectedFile] = useState(null);
 	const [fileList, setFileList] = useImmer([]);
+	const [progress, setProgress] = useState(0);
+
+	const addProgress = (value) => {
+		setProgress(oldProgress => {
+			return Math.min(100, oldProgress + value);
+		});
+	};
 
 	useEffect(() => {
 		const initiateFileList = async () => {
@@ -55,7 +63,7 @@ const Dashboard = ({ token }) => {
 		// upload file in chunks
 		try {
 			const resp = await uploadFileAPI.
-				UploadFileInChunks(selectedFile, fileHash, chunksHash, uploadedChunksHash, token);
+				UploadFileInChunks(selectedFile, fileHash, chunksHash, uploadedChunksHash, token, addProgress);
 			if (resp.data.file_success) {
 				setFileList((draft) => {
 					draft.push({
@@ -66,8 +74,8 @@ const Dashboard = ({ token }) => {
 						upload_time: resp.data.upload_time,
 					});
 				});
-				setSelectedFile(null);
 				alert('File uploaded successfully');
+				setProgress(0);
 			} else {
 				alert('Error uploading file');
 			}
@@ -91,6 +99,9 @@ const Dashboard = ({ token }) => {
 						<button type='submit'>Submit</button>
 					</div>
 				</form>
+			</div>
+			<div className='upload-progress'>
+				<LinearDeterminate progress={progress}></LinearDeterminate>
 			</div>
 			<FileList fileList={fileList}></FileList>
 		</div>

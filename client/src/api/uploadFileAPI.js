@@ -13,7 +13,7 @@ const CheckFileExistence = async (fileHash, token) => {
 	return await response.json();
 };
 
-const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash, token) => {
+const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash, token, addProgress) => {
 	const url = '/file/upload';
 	const headers = {
 		// add this line will cause error
@@ -55,6 +55,7 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 					resolve(resp);
 				}
 				if (resp.data.chunk_success) {
+					addProgress(Math.ceil((end - start) / file.size * 100));
 					if (chunkNum + windowSize < totalChunks) {
 						sendRequest(chunkNum + windowSize);
 					}

@@ -44,3 +44,7 @@
 .form-container button:hover {
 	background-color: #45a049;
 }
+
+.upload-progress {
+	margin: 0 10px;
+}
