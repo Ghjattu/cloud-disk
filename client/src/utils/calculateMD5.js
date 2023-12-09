@@ -19,7 +19,6 @@ const CalculateMD5 = async (file) => {
 			if (currentChunk < totalChunks) {
 				loadNext();
 			} else {
-				console.log('calculate MD5 finished');
 				const fileHash = sparkArrayBuffer.end();
 
 				resolve({
