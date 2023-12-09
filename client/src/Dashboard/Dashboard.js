@@ -6,7 +6,7 @@ import { useImmer } from 'use-immer';
 import CalculateMD5 from '../utils/calculateMD5.js';
 import uploadFileAPI from '../api/uploadFileAPI.js';
 import GetFileAPI from '../api/getFilesAPI.js';
-import FormatBytes from '../utils/formatBytes.js';
+import FileList from '../FileList/FileList.js';
 
 const Dashboard = ({ token }) => {
 	const [selectedFile, setSelectedFile] = useState(null);
@@ -15,9 +15,7 @@ const Dashboard = ({ token }) => {
 	useEffect(() => {
 		const initiateFileList = async () => {
 			const resp = await GetFileAPI.GetFileList(token);
-			if (resp != null) {
-				setFileList(resp);
-			}
+			setFileList(resp.data);
 		};
 		initiateFileList();
 	}, []);
@@ -48,23 +46,23 @@ const Dashboard = ({ token }) => {
 
 		// check if file already exists
 		const resp = await uploadFileAPI.CheckFileExistence(fileHash, token);
-		if (resp.exist) {
+		if (resp.data.exist) {
 			alert('File uploaded successfully');
 			return;
 		}
-		const uploadedChunksHash = resp.chunks_hash;
+		const uploadedChunksHash = resp.data.chunks_hash;
 
 		// upload file in chunks
 		try {
 			const resp = await uploadFileAPI.
 				UploadFileInChunks(selectedFile, fileHash, chunksHash, uploadedChunksHash, token);
-			if (resp.file_success) {
+			if (resp.data.file_success) {
 				setFileList((draft) => {
 					draft.push({
-						file_id: resp.file_id,
+						file_id: resp.data.file_id,
 						file_name: selectedFile.name,
 						file_size: selectedFile.size,
-						file_url: resp.file_url,
+						file_url: resp.data.file_url,
 					});
 				});
 				setSelectedFile(null);
@@ -93,18 +91,7 @@ const Dashboard = ({ token }) => {
 					</div>
 				</form>
 			</div>
-			<div className='file-list-container'>
-				<h3 className='file-list-title'>File List</h3>
-				<ul className='file-list'>
-					{fileList.map((file) => (
-						<li key={file.file_id} className='file-list-item'>
-							<span className='file-name'>{file.file_name}</span>
-							<span className='file-size'>{ FormatBytes(file.file_size) }</span>
-							<span className='file-url'><a href={file.file_url}>Download</a></span>
-						</li>
-					))}
-				</ul>
-			</div>
+			<FileList fileList={fileList}></FileList>
 		</div>
 	);
 };

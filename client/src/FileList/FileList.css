@@ -1,0 +1,59 @@
+.file-list-container {
+	margin: 0 10px;
+	padding: 20px;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.file-list-title {
+	font-size: 1.4rem;
+	margin-bottom: 10px;
+}
+
+
+.file-list {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 20px;
+}
+
+.file-list-item:hover {
+	background-color: #f5f5f5;
+}
+
+.file-list-head>th,
+.file-list-item>td {
+	padding: 17px;
+	text-align: left;
+}
+
+.file-list-head>th:last-child,
+.file-list-item>td:last-child {
+	text-align: right;
+}
+
+.file-list-head>th:last-child {
+	padding-right: 25px;
+}
+
+.file-list-head>th {
+	background-color: #f2f2f2;
+}
+
+.file-list-item>td {
+	border-bottom: 1px solid #e2e2e2;
+}
+
+.file-url a {
+	text-decoration: none;
+	padding: 6px 10px;
+	background-color: #4caf50;
+	color: #fff;
+	border-radius: 3px;
+	transition: background-color 0.3s;
+}
+
+.file-url a:hover {
+	background-color: #45a049;
+}
