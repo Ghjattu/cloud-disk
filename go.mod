@@ -7,6 +7,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/joho/godotenv v1.5.1
 	github.com/zeromicro/go-zero v1.6.0
+	github.com/zeromicro/x v0.0.0-20230424055333-01c7fb9548d4
 	golang.org/x/crypto v0.14.0
 	gorm.io/driver/mysql v1.5.2
 	gorm.io/gorm v1.25.5

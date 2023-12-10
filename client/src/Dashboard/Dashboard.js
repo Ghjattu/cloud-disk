@@ -6,18 +6,25 @@ import { useImmer } from 'use-immer';
 import CalculateMD5 from '../utils/calculateMD5.js';
 import uploadFileAPI from '../api/uploadFileAPI.js';
 import GetFileAPI from '../api/getFilesAPI.js';
-import FormatBytes from '../utils/formatBytes.js';
+import FileList from '../FileList/FileList.js';
+import LinearDeterminate from '../LinearDeterminate/LinearDeterminate.js';
 
 const Dashboard = ({ token }) => {
 	const [selectedFile, setSelectedFile] = useState(null);
+	const [isUploading, setIsUploading] = useState(false);
 	const [fileList, setFileList] = useImmer([]);
+	const [progress, setProgress] = useState(0);
+
+	const addProgress = (value) => {
+		setProgress(oldProgress => {
+			return Math.min(100, oldProgress + value);
+		});
+	};
 
 	useEffect(() => {
 		const initiateFileList = async () => {
 			const resp = await GetFileAPI.GetFileList(token);
-			if (resp != null) {
-				setFileList(resp);
-			}
+			setFileList(resp.data);
 		};
 		initiateFileList();
 	}, []);
@@ -34,6 +41,8 @@ const Dashboard = ({ token }) => {
 			return;
 		}
 
+		setIsUploading(true);
+
 		// calculate MD5 hash of file
 		let fileHash = null;
 		let chunksHash = [];
@@ -43,39 +52,43 @@ const Dashboard = ({ token }) => {
 			chunksHash = resp.chunksHash;
 		} catch (error) {
 			console.log('Error calculating MD5: ', error);
+			setIsUploading(false);
 			return;
 		}
 
 		// check if file already exists
 		const resp = await uploadFileAPI.CheckFileExistence(fileHash, token);
-		if (resp.exist) {
+		if (resp.data.exist) {
 			alert('File uploaded successfully');
+			setIsUploading(false);
 			return;
 		}
-		const uploadedChunksHash = resp.chunks_hash;
+		const uploadedChunksHash = resp.data.chunks_hash;
 
 		// upload file in chunks
 		try {
 			const resp = await uploadFileAPI.
-				UploadFileInChunks(selectedFile, fileHash, chunksHash, uploadedChunksHash, token);
-			if (resp.file_success) {
+				UploadFileInChunks(selectedFile, fileHash, chunksHash, uploadedChunksHash, token, addProgress);
+			if (resp.data.file_success) {
 				setFileList((draft) => {
 					draft.push({
-						file_id: resp.file_id,
+						file_id: resp.data.file_id,
 						file_name: selectedFile.name,
 						file_size: selectedFile.size,
-						file_url: resp.file_url,
+						file_url: resp.data.file_url,
+						upload_time: resp.data.upload_time,
 					});
 				});
-				setSelectedFile(null);
 				alert('File uploaded successfully');
+				setProgress(0);
 			} else {
 				alert('Error uploading file');
 			}
 		} catch (error) {
 			alert('Error uploading file: ', error);
-			return;
 		}
+
+		setIsUploading(false);
 	};
 
 	return (
@@ -89,22 +102,14 @@ const Dashboard = ({ token }) => {
 						<input type='file' id='file' name='file' onChange={handleFileChange} />
 					</div>
 					<div>
-						<button type='submit'>Submit</button>
+						<button type='submit' disabled={isUploading}>Submit</button>
 					</div>
 				</form>
 			</div>
-			<div className='file-list-container'>
-				<h3 className='file-list-title'>File List</h3>
-				<ul className='file-list'>
-					{fileList.map((file) => (
-						<li key={file.file_id} className='file-list-item'>
-							<span className='file-name'>{file.file_name}</span>
-							<span className='file-size'>{ FormatBytes(file.file_size) }</span>
-							<span className='file-url'><a href={file.file_url}>Download</a></span>
-						</li>
-					))}
-				</ul>
+			<div className='upload-progress'>
+				<LinearDeterminate progress={progress}></LinearDeterminate>
 			</div>
+			<FileList fileList={fileList}></FileList>
 		</div>
 	);
 };

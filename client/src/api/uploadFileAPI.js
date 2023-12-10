@@ -1,5 +1,3 @@
-import GetChunkSize from '../utils/getChunkSize.js';
-
 const CheckFileExistence = async (fileHash, token) => {
 	const url = `/file/exist/${fileHash}`;
 	const headers = {
@@ -15,8 +13,7 @@ const CheckFileExistence = async (fileHash, token) => {
 	return await response.json();
 };
 
-const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash, token) => {
-	console.log('start uploading file in chunks');
+const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash, token, addProgress) => {
 	const url = '/file/upload';
 	const headers = {
 		// add this line will cause error
@@ -25,14 +22,13 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 	};
 
 	return new Promise((resolve, reject) => {
-		const chunkSize = GetChunkSize(); // 100 KB
+		// eslint-disable-next-line no-undef
+		const windowSize = parseInt(process.env.REACT_APP_WINDOW_SIZE);
+		// eslint-disable-next-line no-undef
+		const chunkSize = parseInt(process.env.REACT_APP_CHUNK_SIZE);
 		const totalChunks = Math.ceil(file.size / chunkSize);
 
-		for (let chunkNum = 0; chunkNum < totalChunks; chunkNum++) {
-			if (uploadedChunksHash.includes(chunksHash[chunkNum])) {
-				continue;
-			}
-
+		const sendRequest = async (chunkNum) => {
 			const start = chunkNum * chunkSize;
 			const end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
 			const chunk = file.slice(start, end);
@@ -45,24 +41,32 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 				'file_hash': fileHash,
 				'total_chunks': totalChunks,
 				'chunk_hash': chunksHash[chunkNum],
-				'chunk_num': chunkNum
+				'chunk_num': chunkNum,
 			}));
 
-			fetch(url, {
-				method: 'POST',
-				headers: headers,
-				body: formData,
-			})
-				.then((response) => response.json())
-				.then((resp) => {
-					console.log('Upload chunk %d successfully', chunkNum);
-					if (resp.file_success) {
-						resolve(resp);
-					}
-				})
-				.catch((error) => {
-					reject(error);
+			try {
+				const response = await fetch(url, {
+					method: 'POST',
+					headers: headers,
+					body: formData,
 				});
+				const resp = await response.json();
+				if (resp.data.file_success) {
+					resolve(resp);
+				}
+				if (resp.data.chunk_success) {
+					addProgress(Math.ceil((end - start) / file.size * 100));
+					if (chunkNum + windowSize < totalChunks) {
+						sendRequest(chunkNum + windowSize);
+					}
+				}
+			} catch (err) {
+				reject(err);
+			}
+		};
+
+		for (let i = 0; i < Math.min(totalChunks, windowSize); i++) {
+			sendRequest(i);
 		}
 	});
 };

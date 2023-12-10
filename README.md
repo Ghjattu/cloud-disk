@@ -3,7 +3,7 @@
 ## Description
 前端使用 React.js，后端使用 go-zero 框架、MySQL 和 Redis 实现的简易网盘系统，最终文件数据保存在阿里云 OSS 中，支持文件秒传、分片上传、文件下载功能。
 
-分片的大小默认为 500KB。
+分片的大小默认为 5MB。
 
 ## Start
 ### Nginx
@@ -31,12 +31,13 @@ server {
 
 	location /file {
 		# 这一行是限制请求体的大小
-	    # client_max_body_size 10M;
+	    client_max_body_size 10M;
 
 		proxy_pass http://127.0.0.1:8082;
 	}
 }
 ```
+
 接着在 `sites-enabled` 目录下创建一个软链接，并且重新加载配置文件:
 ```shell
 ln -s /etc/nginx/sites-available/clouddisk/clouddisk.conf /etc/nginx/sites-enabled/
@@ -50,6 +51,7 @@ ln -s /etc/nginx/sites-available/clouddisk/clouddisk.conf /etc/nginx/sites-enabl
 cd services/user/api
 touch .env
 ```
+
 然后输入下列的环境变量：
 ```
 MYSQL_HOST=
@@ -69,6 +71,7 @@ ACCESS_EXPIRE=<jwt-expire-seconds>
 cd services/repository/api
 touch .env
 ```
+
 然后输入下列的环境变量：
 ```
 OSS_BUCKET_NAME=
@@ -90,7 +93,16 @@ REDIS_HOST=<ip:port>
 然后执行 `go run repository.go` 即可启动文件服务，文件服务运行在 8082 端口。
 
 ### Frontend
-在 client 文件夹下执行 `npm start` 即可启动前端服务，前端服务运行在 3000 端口。
+在 client 文件夹下，创建一个 `.env` 文件：
+```
+# 5242880=5MB
+REACT_APP_CHUNK_SIZE=5242880
+
+# 限制前端同时上传的请求数量
+REACT_APP_WINDOW_SIZE=10
+```
+
+执行 `npm start` 即可启动前端服务，前端服务运行在 3000 端口。
 ```shell
 cd client
 npm start

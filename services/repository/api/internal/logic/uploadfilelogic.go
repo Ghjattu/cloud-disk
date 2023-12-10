@@ -8,14 +8,17 @@ import (
 	"path"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/types"
 	"github.com/Ghjattu/cloud-disk/services/repository/model"
 	"github.com/Ghjattu/cloud-disk/services/repository/oss"
+
 	"github.com/Ghjattu/cloud-disk/services/repository/utils"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/x/errors"
 )
 
 var mu sync.Mutex
@@ -35,39 +38,32 @@ func NewUploadFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Upload
 }
 
 func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.File, chunkSize int64) (*types.UploadFileResp, error) {
-	resp := &types.UploadFileResp{}
-	fmt.Printf("upload file logic receive chunk num: %d\n", req.ChunkNum)
+	// resp := &types.UploadFileResp{}
 	currentUserIDStr := fmt.Sprintf("%v", l.ctx.Value("user_id"))
 	currentUserID, _ := strconv.ParseInt(currentUserIDStr, 10, 64)
 
 	// consistency check of the chunk
 	chunkHash, err := utils.GetMD5Hash(chunk, chunkSize)
 	if err != nil {
-		resp.StatusMsg = err.Error()
-		return resp, err
+		return nil, errors.New(1, "calculate chunk hash failed: "+err.Error())
 	}
 	if chunkHash != req.ChunkHash {
-		err = fmt.Errorf("chunk hash mismatch")
-		resp.StatusMsg = "chunk hash mismatch"
-		return resp, err
+		return nil, errors.New(1, "chunk consistency check failed")
 	}
 
 	// save chunk in redis and set expiration time to 24 hours
 	redisKey := fmt.Sprintf("%d_%s", currentUserID, req.FileHash)
 	err = utils.SaveChunkInRedis(l.svcCtx.Redis, chunk, redisKey, req.ChunkNum)
 	if err != nil {
-		resp.StatusMsg = err.Error()
-		return resp, err
+		return nil, errors.New(1, "save chunk in redis failed")
 	}
 
 	// get the count of saved chunks
 	mu.Lock()
 	defer mu.Unlock()
 	chunkCount, err := l.svcCtx.Redis.Hlen(redisKey)
-	fmt.Printf("chunk count: %d\n\n", chunkCount)
 	if err != nil {
-		resp.StatusMsg = err.Error()
-		return resp, err
+		return nil, errors.New(1, "get chunk count failed")
 	}
 	if chunkCount == req.TotalChunks {
 		// merge chunks
@@ -76,22 +72,30 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 
 		err = utils.MergeChunks(l.svcCtx.Redis, redisKey, savedLocalPath, req.FileHash)
 		if err != nil {
-			resp.StatusMsg = err.Error()
-			return resp, err
+			return nil, errors.New(1, "merge chunks failed")
 		}
 
 		// upload file to oss
 		objectKey := fmt.Sprintf("%d_%s%s", currentUserID, req.FileHash, path.Ext(req.FileName))
-		ossPath, _ := oss.UploadFile(objectKey, savedLocalPath)
+		ossPath := ""
+		// if req.FileSize <= 100*1024 {
+		// 	fmt.Println("upload file in one piece")
+		// 	ossPath, _ = oss.UploadFile(objectKey, savedLocalPath)
+		// } else {
+		// 	fmt.Println("upload file in chunks")
+		// 	ossPath, _ = oss.UploadFileInChunks(objectKey, savedLocalPath)
+		// }
+		ossPath, _ = oss.UploadFile(objectKey, savedLocalPath)
 
+		now := time.Now()
 		// save file meta to mysql
 		fileModel := &model.File{
-			OwnerID: currentUserID,
-			Hash:    req.FileHash,
-			Name:    req.FileName,
-			Ext:     path.Ext(req.FileName),
-			Size:    req.FileSize,
-			Path:    ossPath,
+			OwnerID:    currentUserID,
+			Hash:       req.FileHash,
+			Name:       req.FileName,
+			Size:       req.FileSize,
+			Path:       ossPath,
+			UploadTime: now,
 		}
 
 		l.svcCtx.DB.Model(&model.File{}).Create(fileModel)
@@ -105,6 +109,7 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 			ChunksCount:  req.TotalChunks,
 			FileID:       int64(fileModel.ID),
 			FileURL:      ossPath,
+			UploadTime:   now.Unix(),
 		}, nil
 	}
 

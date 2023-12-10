@@ -36,12 +36,14 @@ func (l *GetFileListLogic) GetFileList() (resp []types.GetFileListResp, err erro
 		return
 	}
 
+	resp = make([]types.GetFileListResp, 0)
 	for _, file := range fileList {
 		resp = append(resp, types.GetFileListResp{
-			FileID:   int64(file.ID),
-			FileName: file.Name,
-			FileSize: file.Size,
-			FileURL:  file.Path,
+			FileID:     int64(file.ID),
+			FileName:   file.Name,
+			FileSize:   file.Size,
+			FileURL:    file.Path,
+			UploadTime: file.UploadTime.Unix(),
 		})
 	}
 

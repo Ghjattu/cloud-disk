@@ -11,12 +11,12 @@ type UploadFileReq struct {
 }
 
 type UploadFileResp struct {
-	StatusMsg    string `json:"status_msg"`
 	FileSuccess  bool   `json:"file_success"`
 	ChunkSuccess bool   `json:"chunk_success"`
 	ChunksCount  int    `json:"chunks_count"`
 	FileID       int64  `json:"file_id"`
 	FileURL      string `json:"file_url"`
+	UploadTime   int64  `json:"upload_time"` // milisecond
 }
 
 type CheckFileExistReq struct {
@@ -31,8 +31,9 @@ type CheckFileExistResp struct {
 }
 
 type GetFileListResp struct {
-	FileID   int64  `json:"file_id"`
-	FileName string `json:"file_name"`
-	FileSize int64  `json:"file_size"`
-	FileURL  string `json:"file_url"`
+	FileID     int64  `json:"file_id"`
+	FileName   string `json:"file_name"`
+	FileSize   int64  `json:"file_size"`
+	FileURL    string `json:"file_url"`
+	UploadTime int64  `json:"upload_time"` // milisecond
 }
