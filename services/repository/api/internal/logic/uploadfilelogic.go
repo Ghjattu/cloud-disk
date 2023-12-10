@@ -77,7 +77,15 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 
 		// upload file to oss
 		objectKey := fmt.Sprintf("%d_%s%s", currentUserID, req.FileHash, path.Ext(req.FileName))
-		ossPath, _ := oss.UploadFile(objectKey, savedLocalPath)
+		ossPath := ""
+		// if req.FileSize <= 100*1024 {
+		// 	fmt.Println("upload file in one piece")
+		// 	ossPath, _ = oss.UploadFile(objectKey, savedLocalPath)
+		// } else {
+		// 	fmt.Println("upload file in chunks")
+		// 	ossPath, _ = oss.UploadFileInChunks(objectKey, savedLocalPath)
+		// }
+		ossPath, _ = oss.UploadFile(objectKey, savedLocalPath)
 
 		now := time.Now()
 		// save file meta to mysql
