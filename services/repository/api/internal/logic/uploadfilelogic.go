@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"mime/multipart"
-	"os"
 	"path"
 	"strconv"
 	"sync"
@@ -13,7 +12,6 @@ import (
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/types"
 	"github.com/Ghjattu/cloud-disk/services/repository/model"
-	"github.com/Ghjattu/cloud-disk/services/repository/oss"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/utils"
 
@@ -38,7 +36,6 @@ func NewUploadFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Upload
 }
 
 func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.File, chunkSize int64) (*types.UploadFileResp, error) {
-	// resp := &types.UploadFileResp{}
 	currentUserIDStr := fmt.Sprintf("%v", l.ctx.Value("user_id"))
 	currentUserID, _ := strconv.ParseInt(currentUserIDStr, 10, 64)
 
@@ -67,25 +64,12 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 	}
 	if chunkCount == req.TotalChunks {
 		// merge chunks
-		savedLocalPath := fmt.Sprintf("./%d_%s", currentUserID, req.FileHash)
-		defer os.Remove(savedLocalPath)
-
-		err = utils.MergeChunks(l.svcCtx.Redis, redisKey, savedLocalPath, req.FileHash)
+		localFileName := fmt.Sprintf("%d_%s%s", currentUserID, req.FileHash, path.Ext(req.FileName))
+		localFilePath := fmt.Sprintf("%s/%s", l.svcCtx.StaticPath, localFileName)
+		err = utils.MergeChunks(l.svcCtx.Redis, redisKey, localFilePath, req.FileHash)
 		if err != nil {
 			return nil, errors.New(1, "merge chunks failed")
 		}
-
-		// upload file to oss
-		objectKey := fmt.Sprintf("%d_%s%s", currentUserID, req.FileHash, path.Ext(req.FileName))
-		ossPath := ""
-		// if req.FileSize <= 100*1024 {
-		// 	fmt.Println("upload file in one piece")
-		// 	ossPath, _ = oss.UploadFile(objectKey, savedLocalPath)
-		// } else {
-		// 	fmt.Println("upload file in chunks")
-		// 	ossPath, _ = oss.UploadFileInChunks(objectKey, savedLocalPath)
-		// }
-		ossPath, _ = oss.UploadFile(objectKey, savedLocalPath)
 
 		now := time.Now()
 		// save file meta to mysql
@@ -94,7 +78,7 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 			Hash:       req.FileHash,
 			Name:       req.FileName,
 			Size:       req.FileSize,
-			Path:       ossPath,
+			Path:       localFileName,
 			UploadTime: now,
 		}
 
@@ -108,7 +92,7 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 			ChunkSuccess: true,
 			ChunksCount:  req.TotalChunks,
 			FileID:       int64(fileModel.ID),
-			FileURL:      ossPath,
+			FileURL:      localFileName,
 			UploadTime:   now.Unix(),
 		}, nil
 	}
