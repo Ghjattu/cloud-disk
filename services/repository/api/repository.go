@@ -7,7 +7,6 @@ import (
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/config"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/handler"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
-	"github.com/Ghjattu/cloud-disk/services/repository/oss"
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/zeromicro/go-zero/core/conf"
@@ -21,9 +20,6 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c, conf.UseEnv())
-
-	// Initialize oss client.
-	oss.Init(c.OSS.BucketName, c.OSS.Endpoint, c.OSS.AccessKeyID, c.OSS.AccessKeySecret)
 
 	server := rest.MustNewServer(c.RestConf, rest.WithCors())
 	defer server.Stop()

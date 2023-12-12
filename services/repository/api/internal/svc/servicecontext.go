@@ -2,6 +2,10 @@ package svc
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
+	_ "github.com/joho/godotenv/autoload"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/config"
 	"github.com/Ghjattu/cloud-disk/services/repository/model"
@@ -11,9 +15,10 @@ import (
 )
 
 type ServiceContext struct {
-	Config config.Config
-	DB     *gorm.DB
-	Redis  *redis.Redis
+	Config     config.Config
+	DB         *gorm.DB
+	Redis      *redis.Redis
+	StaticPath string // local path for video files
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -27,10 +32,25 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		panic(err)
 	}
 
+	staticPath := os.Getenv("STATIC_PATH")
+	if staticPath == "" {
+		panic("STATIC_PATH is not set")
+	}
+	absPath, err := filepath.Abs(staticPath)
+	if err != nil {
+		panic(err)
+	}
+	// create the directory if it does not exist
+	err = os.MkdirAll(absPath, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+
 	return &ServiceContext{
-		Config: c,
-		DB:     db,
-		Redis:  redis.MustNewRedis(c.RedisConf),
+		Config:     c,
+		DB:         db,
+		Redis:      redis.MustNewRedis(c.RedisConf),
+		StaticPath: absPath,
 	}
 }
 
