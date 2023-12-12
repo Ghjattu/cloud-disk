@@ -1,7 +1,7 @@
 # Cloud Disk
 
 ## Description
-前端使用 React.js，后端使用 go-zero 框架、MySQL 和 Redis 实现的简易网盘系统，最终文件数据保存在阿里云 OSS 中，支持文件秒传、分片上传、文件下载功能。
+前端使用 React.js，后端使用 go-zero 框架、MySQL 和 Redis 实现的简易网盘系统，最终文件数据保存本地并使用 Nginx 作为静态资源代理，支持文件秒传、分片上传、文件下载功能。
 
 分片的大小默认为 5MB。
 
@@ -34,6 +34,11 @@ server {
 	    client_max_body_size 10M;
 
 		proxy_pass http://127.0.0.1:8082;
+	}
+
+	# 下载文件时的路由，将 alias 后面的路径改为你的静态文件夹的绝对路径
+	location /static/videos {
+		alias <your-static-directory-path>;
 	}
 }
 ```
@@ -74,11 +79,6 @@ touch .env
 
 然后输入下列的环境变量：
 ```
-OSS_BUCKET_NAME=
-OSS_ENDPOINT=
-OSS_ACCESS_KEY_ID=
-OSS_ACCESS_KEY_SECRET=
-
 ACCESS_SECRET=<jwt-secret-key>
 ACCESS_EXPIRE=<jwt-expire-seconds>
 
@@ -88,6 +88,9 @@ MYSQL_USER=
 MYSQL_DATABASE=
 
 REDIS_HOST=<ip:port>
+
+# 和 Nginx 配置文件中的路径一致
+STATIC_PATH=<your-static-directory-path>
 ```
 
 然后执行 `go run repository.go` 即可启动文件服务，文件服务运行在 8082 端口。
