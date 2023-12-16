@@ -74,7 +74,7 @@ func MergeChunks(redis *redis.Redis, key, savedLocalPath, fileHash string) error
 	})
 
 	// create a local file
-	localFile, err := os.OpenFile(savedLocalPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, os.ModePerm)
+	localFile, err := os.OpenFile(savedLocalPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}

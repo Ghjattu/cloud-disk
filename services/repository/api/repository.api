@@ -2,21 +2,25 @@ syntax = "v1"
 
 type (
 	UploadFileReq {
-		FileName    string `json:"file_name"`
-		FileSize    int64  `json:"file_size"`
-		FileHash    string `json:"file_hash"`
-		TotalChunks int    `json:"total_chunks"`
-		ChunkHash   string `json:"chunk_hash"`
-		ChunkNum    int    `json:"chunk_num"`
+		FileHash  string `json:"file_hash"`
+		ChunkHash string `json:"chunk_hash"`
+		ChunkNum  int    `json:"chunk_num"`
 	}
 	UploadFileResp {
-		FileSuccess  bool   `json:"file_success"`
-		ChunkSuccess bool   `json:"chunk_success"`
-		ChunksCount  int    `json:"chunks_count"`
-		FileID       int64  `json:"file_id"`
-		FileURL      string `json:"file_url"`
-		UploadTime   int64  `json:"upload_time"` // seconds
+		ChunkSuccess bool `json:"chunk_success"`
 	}
+
+	MergeChunksReq {
+		FileHash string `json:"file_hash"`
+		FileName string `json:"file_name"`
+		FileSize int64  `json:"file_size"`
+	}
+	MergeChunksResp {
+		FileID     int64  `json:"file_id"`
+		FileURL    string `json:"file_url"`
+		UploadTime int64  `json:"upload_time"` // seconds
+	}
+
 	CheckFileExistReq {
 		Hash string `path:"hash"`
 	}
@@ -26,6 +30,7 @@ type (
 		FileURL    string   `json:"file_url"`
 		ChunksHash []string `json:"chunks_hash"`
 	}
+
 	GetFileListResp {
 		FileID     int64  `json:"file_id"`
 		FileName   string `json:"file_name"`
@@ -44,6 +49,12 @@ service repository-api {
 	)
 	@handler UploadFile
 	post /file/upload(UploadFileReq) returns(UploadFileResp)
+
+	@doc(
+		summary: "Merge Chunks",
+	)
+	@handler MergeChunks
+	post /file/merge(MergeChunksReq) returns(MergeChunksResp)
 
 	@doc(
 		summary: "Check File Exist",

@@ -14,6 +14,7 @@ const Dashboard = ({ token }) => {
 	const [isUploading, setIsUploading] = useState(false);
 	const [fileList, setFileList] = useImmer([]);
 	const [progress, setProgress] = useState(0);
+	const controller = new AbortController();
 
 	const addProgress = (value) => {
 		setProgress(oldProgress => {
@@ -67,25 +68,29 @@ const Dashboard = ({ token }) => {
 
 		// upload file in chunks
 		try {
-			const resp = await uploadFileAPI.
-				UploadFileInChunks(selectedFile, fileHash, chunksHash, uploadedChunksHash, token, addProgress);
-			if (resp.data.file_success) {
-				setFileList((draft) => {
-					draft.push({
-						file_id: resp.data.file_id,
-						file_name: selectedFile.name,
-						file_size: selectedFile.size,
-						file_url: resp.data.file_url,
-						upload_time: resp.data.upload_time,
-					});
-				});
-				alert('File uploaded successfully');
-				setProgress(0);
-			} else {
-				alert('Error uploading file');
-			}
+			await uploadFileAPI.
+				UploadChunks(selectedFile, fileHash, chunksHash, uploadedChunksHash, token, addProgress, controller);
 		} catch (error) {
-			alert('Error uploading file: ', error);
+			alert(error);
+			setIsUploading(false);
+			return;
+		}
+
+		// merge chunks
+		try {
+			const resp = await uploadFileAPI.MergeChunks(fileHash, selectedFile.name, selectedFile.size, token);
+			setFileList(draft => {
+				draft.push({
+					'file_id': resp.file_id,
+					'file_name': selectedFile.name,
+					'file_size': selectedFile.size,
+					'file_url': resp.file_url,
+					'upload_time': resp.upload_time,
+				});
+			});
+			alert('File uploaded successfully');
+		} catch (error) {
+			alert(error);
 		}
 
 		setIsUploading(false);

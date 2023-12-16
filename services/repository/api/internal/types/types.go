@@ -2,21 +2,25 @@
 package types
 
 type UploadFileReq struct {
-	FileName    string `json:"file_name"`
-	FileSize    int64  `json:"file_size"`
-	FileHash    string `json:"file_hash"`
-	TotalChunks int    `json:"total_chunks"`
-	ChunkHash   string `json:"chunk_hash"`
-	ChunkNum    int    `json:"chunk_num"`
+	FileHash  string `json:"file_hash"`
+	ChunkHash string `json:"chunk_hash"`
+	ChunkNum  int    `json:"chunk_num"`
 }
 
 type UploadFileResp struct {
-	FileSuccess  bool   `json:"file_success"`
-	ChunkSuccess bool   `json:"chunk_success"`
-	ChunksCount  int    `json:"chunks_count"`
-	FileID       int64  `json:"file_id"`
-	FileURL      string `json:"file_url"`
-	UploadTime   int64  `json:"upload_time"` // milisecond
+	ChunkSuccess bool `json:"chunk_success"`
+}
+
+type MergeChunksReq struct {
+	FileHash string `json:"file_hash"`
+	FileName string `json:"file_name"`
+	FileSize int64  `json:"file_size"`
+}
+
+type MergeChunksResp struct {
+	FileID     int64  `json:"file_id"`
+	FileURL    string `json:"file_url"`
+	UploadTime int64  `json:"upload_time"` // seconds
 }
 
 type CheckFileExistReq struct {
@@ -35,5 +39,5 @@ type GetFileListResp struct {
 	FileName   string `json:"file_name"`
 	FileSize   int64  `json:"file_size"`
 	FileURL    string `json:"file_url"`
-	UploadTime int64  `json:"upload_time"` // milisecond
+	UploadTime int64  `json:"upload_time"` // seconds
 }
