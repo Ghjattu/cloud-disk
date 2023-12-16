@@ -13,8 +13,8 @@ const FormatTime = (time) => {
 	} else if (isYesterday) {
 		return `Yesterday ${format(date)}`;
 	} else {
-		// yy-mm-dd
-		const year = date.getFullYear().toString().slice(-2);
+		// yyyy-mm-dd
+		const year = date.getFullYear().toString();
 		const month = date.getMonth() + 1;
 		const day = date.getDate();
 		return `${year}-${month}-${day}`;
