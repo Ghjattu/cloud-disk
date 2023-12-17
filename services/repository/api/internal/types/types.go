@@ -12,9 +12,10 @@ type UploadFileResp struct {
 }
 
 type MergeChunksReq struct {
-	FileHash string `json:"file_hash"`
-	FileName string `json:"file_name"`
-	FileSize int64  `json:"file_size"`
+	FileHash    string `json:"file_hash"`
+	FileName    string `json:"file_name"`
+	FileSize    int64  `json:"file_size"`
+	TotalChunks int64  `json:"total_chunks"`
 }
 
 type MergeChunksResp struct {

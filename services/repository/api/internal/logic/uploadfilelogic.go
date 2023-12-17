@@ -43,7 +43,7 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 	}
 
 	// save chunk in redis and set expiration time to 24 hours
-	redisKey := fmt.Sprintf("%d_%s", currentUserID, req.FileHash)
+	redisKey := fmt.Sprintf("%d_%s_chunks", currentUserID, req.FileHash)
 	err = utils.SaveChunkInRedis(l.svcCtx.Redis, chunk, redisKey, req.ChunkNum)
 	if err != nil {
 		return nil, errors.New(1, "save chunk in redis failed")

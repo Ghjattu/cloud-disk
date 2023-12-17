@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"fmt"
+	"math"
 	"path"
 	"strconv"
 	"time"
@@ -10,10 +11,9 @@ import (
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/types"
 	"github.com/Ghjattu/cloud-disk/services/repository/model"
-	"github.com/Ghjattu/cloud-disk/services/repository/utils"
+	"github.com/Ghjattu/cloud-disk/services/repository/workerpool"
 
 	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/x/errors"
 )
 
 type MergeChunksLogic struct {
@@ -34,33 +34,65 @@ func (l *MergeChunksLogic) MergeChunks(req *types.MergeChunksReq) (resp *types.M
 	currentUserIDStr := fmt.Sprintf("%v", l.ctx.Value("user_id"))
 	currentUserID, _ := strconv.ParseInt(currentUserIDStr, 10, 64)
 
-	redisKey := fmt.Sprintf("%d_%s", currentUserID, req.FileHash)
+	prefix := fmt.Sprintf("%d_%s", currentUserID, req.FileHash)
+	lockName := fmt.Sprintf("%s_%s", prefix, "merge_lock")
 	localFileName := fmt.Sprintf("%d_%s%s", currentUserID, req.FileHash, path.Ext(req.FileName))
 	localFilePath := fmt.Sprintf("%s/%s", l.svcCtx.StaticPath, localFileName)
-	err = utils.MergeChunks(l.svcCtx.Redis, redisKey, localFilePath, req.FileHash)
+
+	success, err := l.svcCtx.Redis.Setnx(lockName, "true")
 	if err != nil {
-		return nil, errors.New(1, "merge chunks failed: "+err.Error())
+		return nil, err
+	}
+	// only the first request can get the lock
+	if success {
+		// one hour
+		l.svcCtx.Redis.Expire(lockName, 60*60)
+
+		mergeJob := workerpool.Job{
+			Redis:          l.svcCtx.Redis,
+			RedisKeyPrefix: prefix,
+			TotalChunks:    req.TotalChunks,
+			LocalFilePath:  localFilePath,
+			FileHash:       req.FileHash,
+		}
+		l.svcCtx.JobChan <- mergeJob
 	}
 
-	now := time.Now()
-	// save file meta to mysql
-	fileModel := &model.File{
-		OwnerID:    currentUserID,
-		Hash:       req.FileHash,
-		Name:       req.FileName,
-		Size:       req.FileSize,
-		Path:       localFileName,
-		UploadTime: now,
+	checkNum := int(math.Ceil(float64(l.svcCtx.Config.Timeout)/1000)) - 1
+	redisKey := fmt.Sprintf("%s_chunks", prefix)
+	resultKey := fmt.Sprintf("%s_result", prefix)
+	for i := 0; i < checkNum; i++ {
+		// check merge result
+		value, err := l.svcCtx.Redis.Get(resultKey)
+		if err == nil && value != "" {
+			if value == "success" {
+				now := time.Now()
+				// save file meta to mysql
+				fileModel := &model.File{
+					OwnerID:    currentUserID,
+					Hash:       req.FileHash,
+					Name:       req.FileName,
+					Size:       req.FileSize,
+					Path:       localFileName,
+					UploadTime: now,
+				}
+				l.svcCtx.DB.Model(&model.File{}).Create(fileModel)
+
+				// delete keys
+				l.svcCtx.Redis.Del(redisKey, resultKey, lockName)
+
+				return &types.MergeChunksResp{
+					FileID:     int64(fileModel.ID),
+					FileURL:    localFileName,
+					UploadTime: now.Unix(),
+				}, nil
+			} else {
+				return nil, fmt.Errorf("merge failed: %s", value)
+			}
+		}
+
+		time.Sleep(time.Second)
 	}
-	l.svcCtx.DB.Model(&model.File{}).Create(fileModel)
 
-	// delete redis key
-	l.svcCtx.Redis.Del(redisKey)
-
-	return &types.MergeChunksResp{
-		FileID:     int64(fileModel.ID),
-		FileURL:    localFileName,
-		UploadTime: now.Unix(),
-	}, nil
-
+	return nil, fmt.Errorf("timeout")
 }

@@ -26,3 +26,7 @@ RedisConf:
   Host: ${REDIS_HOST}
   Pass: ${REDIS_PASSWORD}
   Type: node
+
+WorkerPool:
+  MaxWorkers: 100
+  JobChannelSize: 1000

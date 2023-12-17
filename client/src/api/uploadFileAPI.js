@@ -74,6 +74,10 @@ const UploadChunks = async (file, fileHash, chunksHash, uploadedChunksHash, toke
 };
 
 const MergeChunks = async (fileHash, fileName, fileSize, token) => {
+	// eslint-disable-next-line no-undef
+	const chunkSize = parseInt(process.env.REACT_APP_CHUNK_SIZE);
+	const totalChunks = Math.ceil(fileSize / chunkSize);
+
 	const url = '/file/merge';
 	const headers = {
 		'Content-Type': 'application/json',
@@ -83,6 +87,7 @@ const MergeChunks = async (fileHash, fileName, fileSize, token) => {
 		'file_hash': fileHash,
 		'file_name': fileName,
 		'file_size': fileSize,
+		'total_chunks': totalChunks,
 	});
 
 	return new Promise((resolve, reject) => {
@@ -95,9 +100,14 @@ const MergeChunks = async (fileHash, fileName, fileSize, token) => {
 				});
 				const resp = await response.json();
 				if (resp.code !== 0) {
-					throw new Error(resp.msg);
+					if (resp.msg === 'timeout') {
+						sendRequest();
+					} else {
+						throw new Error(resp.msg);
+					}
+				} else {
+					resolve(resp.data);
 				}
-				resolve(resp.data);
 			} catch (err) {
 				reject(err);
 			}
