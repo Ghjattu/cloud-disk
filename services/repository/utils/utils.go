@@ -60,10 +60,14 @@ func SaveChunkInRedis(redis *redis.Redis, chunk multipart.File, key string, fiel
 	return nil
 }
 
-func MergeChunks(redis *redis.Redis, key, savedLocalPath, fileHash string) error {
+func MergeChunks(redis *redis.Redis, key, savedLocalPath, fileHash string, totalChunks int64) error {
 	fields, err := redis.Hkeys(key)
 	if err != nil {
 		return err
+	}
+
+	if int64(len(fields)) != totalChunks {
+		return fmt.Errorf("incomplete chunks")
 	}
 
 	// sort by chunk number
@@ -74,7 +78,7 @@ func MergeChunks(redis *redis.Redis, key, savedLocalPath, fileHash string) error
 	})
 
 	// create a local file
-	localFile, err := os.OpenFile(savedLocalPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, os.ModePerm)
+	localFile, err := os.OpenFile(savedLocalPath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}

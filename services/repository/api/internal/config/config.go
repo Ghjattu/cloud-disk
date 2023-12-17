@@ -24,5 +24,9 @@ type Config struct {
 		Password string
 		Database string
 	}
-	RedisConf redis.RedisConf
+	RedisConf  redis.RedisConf
+	WorkerPool struct {
+		MaxWorkers     int64
+		JobChannelSize int64
+	}
 }

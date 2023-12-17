@@ -4,22 +4,16 @@ import (
 	"context"
 	"fmt"
 	"mime/multipart"
-	"path"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/svc"
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/types"
-	"github.com/Ghjattu/cloud-disk/services/repository/model"
 
 	"github.com/Ghjattu/cloud-disk/services/repository/utils"
 
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/x/errors"
 )
-
-var mu sync.Mutex
 
 type UploadFileLogic struct {
 	logx.Logger
@@ -49,59 +43,13 @@ func (l *UploadFileLogic) UploadFile(req *types.UploadFileReq, chunk multipart.F
 	}
 
 	// save chunk in redis and set expiration time to 24 hours
-	redisKey := fmt.Sprintf("%d_%s", currentUserID, req.FileHash)
+	redisKey := fmt.Sprintf("%d_%s_chunks", currentUserID, req.FileHash)
 	err = utils.SaveChunkInRedis(l.svcCtx.Redis, chunk, redisKey, req.ChunkNum)
 	if err != nil {
 		return nil, errors.New(1, "save chunk in redis failed")
 	}
 
-	// get the count of saved chunks
-	mu.Lock()
-	defer mu.Unlock()
-	chunkCount, err := l.svcCtx.Redis.Hlen(redisKey)
-	if err != nil {
-		return nil, errors.New(1, "get chunk count failed")
-	}
-	if chunkCount == req.TotalChunks {
-		// merge chunks
-		localFileName := fmt.Sprintf("%d_%s%s", currentUserID, req.FileHash, path.Ext(req.FileName))
-		localFilePath := fmt.Sprintf("%s/%s", l.svcCtx.StaticPath, localFileName)
-		err = utils.MergeChunks(l.svcCtx.Redis, redisKey, localFilePath, req.FileHash)
-		if err != nil {
-			return nil, errors.New(1, "merge chunks failed")
-		}
-
-		now := time.Now()
-		// save file meta to mysql
-		fileModel := &model.File{
-			OwnerID:    currentUserID,
-			Hash:       req.FileHash,
-			Name:       req.FileName,
-			Size:       req.FileSize,
-			Path:       localFileName,
-			UploadTime: now,
-		}
-
-		l.svcCtx.DB.Model(&model.File{}).Create(fileModel)
-
-		// delete redis key
-		l.svcCtx.Redis.Del(redisKey)
-
-		return &types.UploadFileResp{
-			FileSuccess:  true,
-			ChunkSuccess: true,
-			ChunksCount:  req.TotalChunks,
-			FileID:       int64(fileModel.ID),
-			FileURL:      localFileName,
-			UploadTime:   now.Unix(),
-		}, nil
-	}
-
 	return &types.UploadFileResp{
-		FileSuccess:  false,
 		ChunkSuccess: true,
-		ChunksCount:  chunkCount,
-		FileID:       -1,
-		FileURL:      "",
 	}, nil
 }

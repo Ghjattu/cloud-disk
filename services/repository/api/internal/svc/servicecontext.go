@@ -9,6 +9,7 @@ import (
 
 	"github.com/Ghjattu/cloud-disk/services/repository/api/internal/config"
 	"github.com/Ghjattu/cloud-disk/services/repository/model"
+	"github.com/Ghjattu/cloud-disk/services/repository/workerpool"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -18,7 +19,8 @@ type ServiceContext struct {
 	Config     config.Config
 	DB         *gorm.DB
 	Redis      *redis.Redis
-	StaticPath string // local path for video files
+	StaticPath string // local path for saved files
+	JobChan    chan workerpool.Job
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -46,11 +48,16 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		panic(err)
 	}
 
+	// create worker pool
+	jobChan := make(chan workerpool.Job, c.WorkerPool.JobChannelSize)
+	workerpool.CreateWorkerPool(c.WorkerPool.MaxWorkers, jobChan)
+
 	return &ServiceContext{
 		Config:     c,
 		DB:         db,
 		Redis:      redis.MustNewRedis(c.RedisConf),
 		StaticPath: absPath,
+		JobChan:    jobChan,
 	}
 }
 

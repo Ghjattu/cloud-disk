@@ -18,6 +18,11 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: UploadFileHandler(serverCtx),
 			},
 			{
+				Method:  http.MethodPost,
+				Path:    "/file/merge",
+				Handler: MergeChunksHandler(serverCtx),
+			},
+			{
 				Method:  http.MethodGet,
 				Path:    "/file/exist/:hash",
 				Handler: CheckFileExistHandler(serverCtx),

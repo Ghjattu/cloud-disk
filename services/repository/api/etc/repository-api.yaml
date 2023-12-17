@@ -2,7 +2,7 @@ Name: repository-api
 Host: 0.0.0.0
 Port: 8082
 Timeout: 4000
-MaxBytes: 10485760 # 10MB
+MaxBytes: 20971520 # 20MB
 MaxConns: 100
 
 Auth:
@@ -26,3 +26,7 @@ RedisConf:
   Host: ${REDIS_HOST}
   Pass: ${REDIS_PASSWORD}
   Type: node
+
+WorkerPool:
+  MaxWorkers: 100
+  JobChannelSize: 1000

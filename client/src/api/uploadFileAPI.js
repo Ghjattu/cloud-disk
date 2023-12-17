@@ -13,7 +13,7 @@ const CheckFileExistence = async (fileHash, token) => {
 	return await response.json();
 };
 
-const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash, token, addProgress) => {
+const UploadChunks = async (file, fileHash, chunksHash, uploadedChunksHash, token, addProgress, controller) => {
 	const url = '/file/upload';
 	const headers = {
 		// add this line will cause error
@@ -27,6 +27,7 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 		// eslint-disable-next-line no-undef
 		const chunkSize = parseInt(process.env.REACT_APP_CHUNK_SIZE);
 		const totalChunks = Math.ceil(file.size / chunkSize);
+		let successfulChunks = 0;
 
 		const sendRequest = async (chunkNum) => {
 			const start = chunkNum * chunkSize;
@@ -36,10 +37,7 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 			const formData = new FormData();
 			formData.append('chunk', chunk);
 			formData.append('chunk_info', JSON.stringify({
-				'file_name': file.name,
-				'file_size': file.size,
 				'file_hash': fileHash,
-				'total_chunks': totalChunks,
 				'chunk_hash': chunksHash[chunkNum],
 				'chunk_num': chunkNum,
 			}));
@@ -51,16 +49,20 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 					body: formData,
 				});
 				const resp = await response.json();
-				if (resp.data.file_success) {
-					resolve(resp);
+				if (resp.code !== 0) {
+					throw new Error(resp.msg);
 				}
 				if (resp.data.chunk_success) {
+					successfulChunks++;
 					addProgress(Math.ceil((end - start) / file.size * 100));
-					if (chunkNum + windowSize < totalChunks) {
+					if (successfulChunks === totalChunks) {
+						resolve();
+					} else if (chunkNum + windowSize < totalChunks) {
 						sendRequest(chunkNum + windowSize);
 					}
 				}
 			} catch (err) {
+				controller.abort();
 				reject(err);
 			}
 		};
@@ -71,9 +73,54 @@ const UploadFileInChunks = async (file, fileHash, chunksHash, uploadedChunksHash
 	});
 };
 
+const MergeChunks = async (fileHash, fileName, fileSize, token) => {
+	// eslint-disable-next-line no-undef
+	const chunkSize = parseInt(process.env.REACT_APP_CHUNK_SIZE);
+	const totalChunks = Math.ceil(fileSize / chunkSize);
+
+	const url = '/file/merge';
+	const headers = {
+		'Content-Type': 'application/json',
+		'Authorization': `Bearer ${token}`,
+	};
+	const data = JSON.stringify({
+		'file_hash': fileHash,
+		'file_name': fileName,
+		'file_size': fileSize,
+		'total_chunks': totalChunks,
+	});
+
+	return new Promise((resolve, reject) => {
+		const sendRequest = async () => {
+			try {
+				const response = await fetch(url, {
+					method: 'POST',
+					headers: headers,
+					body: data,
+				});
+				const resp = await response.json();
+				if (resp.code !== 0) {
+					if (resp.msg === 'timeout') {
+						sendRequest();
+					} else {
+						throw new Error(resp.msg);
+					}
+				} else {
+					resolve(resp.data);
+				}
+			} catch (err) {
+				reject(err);
+			}
+		};
+
+		sendRequest();
+	});
+};
+
 const UploadFileAPI = {
 	CheckFileExistence,
-	UploadFileInChunks,
+	UploadChunks,
+	MergeChunks,
 };
 
 export default UploadFileAPI;
