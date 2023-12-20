@@ -12,3 +12,8 @@ MySQL:
 Auth:
   AccessSecret: ${ACCESS_SECRET}
   AccessExpire: ${ACCESS_EXPIRE}
+
+OAuthGithub:
+  ClientID: ${CLIENT_ID}
+  ClientSecret: ${CLIENT_SECRET}
+  RedirectURL: ${REDIRECT_URL}

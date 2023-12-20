@@ -15,4 +15,9 @@ type Config struct {
 		AccessSecret string
 		AccessExpire int64
 	}
+	OAuthGithub struct {
+		ClientID     string
+		ClientSecret string
+		RedirectURL  string
+	}
 }

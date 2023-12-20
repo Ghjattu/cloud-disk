@@ -15,11 +15,17 @@ type (
 	LoginResp {
 		Token string `json:"token"`
 	}
-	UserInfoReq {
-		ID int64 `json:"id"`
+
+	GetGithubLoginURLResp {
+		URL string `json:"url"`
 	}
-	UserInfoResp {
-		Name string `json:"name"`
+
+	GithubCallbackReq {
+		Code string `path:"code"`
+	}
+	GithubCallbackResp {
+		UserName string `json:"user_name"`
+		Token    string `json:"token"`
 	}
 )
 service user-api {
@@ -35,16 +41,16 @@ service user-api {
 	@handler Register
 	post /user/register(RegisterReq) returns(RegisterResp)
 
-}
-
-@server (
-	jwt: Auth
-)
-service user-api {
 	@doc(
-		summary: "Get User Info",
+		summary: "Get Github Login URL",
 	)
-	@handler GetUserInfo
-	get /user/info(UserInfoReq) returns(UserInfoResp)
+	@handler GetGithubLoginURL
+	get /oauth/github/login_url returns(GetGithubLoginURLResp)
+
+	@doc(
+		summary: "Github Callback",
+	)
+	@handler GithubCallback
+	post /oauth/github/callback/:code(GithubCallbackReq) returns(GithubCallbackResp)
 
 }

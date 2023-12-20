@@ -19,10 +19,15 @@ type LoginResp struct {
 	Token string `json:"token"`
 }
 
-type UserInfoReq struct {
-	ID int64 `json:"id"`
+type GetGithubLoginURLResp struct {
+	URL string `json:"url"`
 }
 
-type UserInfoResp struct {
-	Name string `json:"name"`
+type GithubCallbackReq struct {
+	Code string `path:"code"`
+}
+
+type GithubCallbackResp struct {
+	UserName string `json:"user_name"`
+	Token    string `json:"token"`
 }
