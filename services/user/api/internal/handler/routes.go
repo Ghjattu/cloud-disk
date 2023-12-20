@@ -22,17 +22,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/user/register",
 				Handler: RegisterHandler(serverCtx),
 			},
-		},
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
 			{
 				Method:  http.MethodGet,
-				Path:    "/user/info",
-				Handler: GetUserInfoHandler(serverCtx),
+				Path:    "/oauth/github/login_url",
+				Handler: GetGithubLoginURLHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/oauth/github/callback/:code",
+				Handler: GithubCallbackHandler(serverCtx),
 			},
 		},
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 }
